@@ -5,6 +5,8 @@ Via HACS custom repo (not tested at the moment), or copy the folder EasyControls
 
 The integration could be set up completely from UI. After the repo is under custom_components the integration should be found via EasyControls3_homeassistant (sorry for the name)
 
+It only needs the ip address (e.g. 10.0.0.42) to find it
+
 ## Current state
 
 **First release - only some testing - no great error handling**
