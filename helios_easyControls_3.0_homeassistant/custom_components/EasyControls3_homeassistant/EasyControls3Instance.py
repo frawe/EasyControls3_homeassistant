@@ -1,15 +1,16 @@
-import asyncio
-from websockets.sync.client import connect
 import datetime
-from dateutil.relativedelta import relativedelta
 import logging
+import math
 
+from dateutil.relativedelta import relativedelta
+from websockets.sync.client import connect
+
+from .Conversions import dataToCelsius
 from .deviceList import deviceInfo
 from .KWLStates import KWLState
-from .Conversions import dataToCelsius
-
 
 LOGGER = logging.getLogger(__name__)
+
 
 class EasyControls3Instance:
     def __init__(self, url: str) -> None:
@@ -18,7 +19,9 @@ class EasyControls3Instance:
         self._deviceType = None
         self._SerialNR = None
         self._instanceState = None
-        self._FanSpeed = None
+        self._CurrentFanSpeed = None
+        self._intensivFanSpeed = None
+        self._intensivDuration = None
         self._OutsideTemperatur = None
         self._SupplyTemperatur = None
         self._IndoorTepmeratur = None
@@ -48,12 +51,9 @@ class EasyControls3Instance:
             > self._minSecondsBetweenRead
         ):
             self._lastUpdate = datetime.datetime.now()
-            # request current data package
             request = bytes.fromhex("0300f6000000f900")
             response = await self._exchangeData(request)
-            # LOGGER.debug(f"Received: {response}")
             self._parseData(response)
-        # else nothing needs to be done
 
     def _parseData(self, data):
         # device info
@@ -78,14 +78,15 @@ class EasyControls3Instance:
         state = data[107 * 2 + 1]
         fire = data[111 * 2 + 1]
         boost = data[110 * 2 + 1]
-        tmpState = "Zuhause"
-        tmpState = "Unterwegs" if state != 0 else tmpState
-        tmpState = "Intensivlüftung" if boost != 0 else tmpState
-        tmpState = "Individuell" if fire != 0 else tmpState
+        tmpState = KWLState.AtHome
+        tmpState = KWLState.Away if state != 0 else tmpState
+        tmpState = KWLState.Intensive if boost != 0 else tmpState
+        tmpState = KWLState.Individual if fire != 0 else tmpState
         self._instanceState = tmpState
-        
-        #fan
-        self._FanSpeed = data[129]
+
+        # fan
+        self._CurrentFanSpeed = data[129]
+        self._intensivFanSpeed = data[431]
 
         # temperaturs
         self._OutsideTemperatur = dataToCelsius(data, 67)
@@ -108,25 +109,15 @@ class EasyControls3Instance:
             days=+int(self._filterInterval)
         )
 
-        # LOGGER.debug("data")
-        # LOGGER.debug(instanceState)
-        # LOGGER.debug(deviceModel)
-        # LOGGER.debug(deviceType)
-        # LOGGER.debug(setSerialNR)
-        # LOGGER.debug(FanSpeed )
-        # LOGGER.debug(OutsideTemperatur)
-        # LOGGER.debug(SupplyTemperatur)
-        # LOGGER.debug(IndoorTepmeratur)
-        # LOGGER.debug(ExhaustTepmeratur)
-        # LOGGER.debug(state)
-        # LOGGER.debug(fire )
-        # LOGGER.debug(boost)
-        # LOGGER.debug(AirRH)
-        # LOGGER.debug(filterInterval)
-        # LOGGER.debug(filterChanged)
-        # LOGGER.debug(filterDue)
-        # LOGGER.debug("data end\n\n")
-  
+        # duration
+        intensivDurationInMinutes = data[493]
+        intensivDurationHours = math.floor(intensivDurationInMinutes / 60)
+        intensivDurationMinutes = intensivDurationInMinutes - 60 * intensivDurationHours
+
+        self._intensivDuration = datetime.time(
+            intensivDurationHours, intensivDurationMinutes
+        )
+
     async def switchMode(self, wantedKWLState):
         if wantedKWLState is KWLState.AtHome:
             requestData = "0800f9000112000004120000051200000b37"
@@ -140,7 +131,6 @@ class EasyControls3Instance:
             raise TypeError("direction must be an instance of Direction Enum")
 
         request = bytes.fromhex(requestData)
-
         response = await self._exchangeData(request)
 
         if bytes.fromhex("0200f500f700") == response:
@@ -158,11 +148,22 @@ class EasyControls3Instance:
         else:
             requestedFanSpeed = round(requestedFanSpeed)
 
+        requestedSpeedPlainString = (
+            f"{requestedFanSpeed:x}"
+            if len(f"{requestedFanSpeed:x}") == 2
+            else ("0" + f"{requestedFanSpeed:x}")
+        )  # needs to be 1byte, 2 nibble long
+        requestedSpeedModdedString = (
+            f"{requestedFanSpeed + 30 :x}"
+            if len(f"{requestedFanSpeed + 30 :x}") == 2
+            else ("0" + f"{requestedFanSpeed + 30 :x}")
+        )  # needs to be 1byte, 2 nibble long
+
         requestData = (
             "0400f9002150"
-            + f"{requestedFanSpeed:x}"
+            + requestedSpeedPlainString
             + "00"
-            + f"{requestedFanSpeed + 30:x}"
+            + requestedSpeedModdedString
             + "51"
         )
 
@@ -175,7 +176,10 @@ class EasyControls3Instance:
 
         self._sthModified = True
 
-    async def setIntensiveDuraion(self, requestedDuration: int):
+    async def setIntensiveDuration(self, requestedDurationTime: datetime.time):
+        requestedDuration = (
+            requestedDurationTime.hour * 60 + requestedDurationTime.minute
+        )
         if requestedDuration < 1:
             requestedDuration = 1
         elif (
@@ -184,10 +188,6 @@ class EasyControls3Instance:
             requestedDuration = 0x5A0
         else:
             requestedDuration = round(requestedDuration)
-
-        # the last 4bytes of the payload
-        # first 2 bytes minuten in hex (using little endian)
-        # last 2 bytes minutes in hex + 0x513D (using little endian)
 
         requestData = (
             "0400f9004050"
@@ -208,11 +208,8 @@ class EasyControls3Instance:
         # """Test connectivity by doing a read."""
         request = bytes.fromhex("0300f6000000f900")
         response = await self._exchangeData(request)
-        if response != None:
-            return True
-        else:
-            return False
-
+        self._parseData(response)
+        return bool(response is not None)
 
     @property
     def url(self):
@@ -235,8 +232,16 @@ class EasyControls3Instance:
         return self._instanceState
 
     @property
-    def FanSpeed(self):
-        return self._FanSpeed
+    def CurrentFanSpeed(self):
+        return self._CurrentFanSpeed
+
+    @property
+    def IntensivFanSpeed(self):
+        return self._intensivFanSpeed
+
+    @property
+    def IntensivDuration(self):
+        return self._intensivDuration
 
     @property
     def OutsideTemperatur(self):
@@ -273,6 +278,3 @@ class EasyControls3Instance:
     @property
     def sthModified(self):
         return self._sthModified
-
-
-

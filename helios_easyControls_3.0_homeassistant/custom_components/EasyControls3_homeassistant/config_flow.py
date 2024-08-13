@@ -1,6 +1,8 @@
 """Config flow for Hello World integration."""
+
 from __future__ import annotations
 
+import ipaddress
 import logging
 from typing import Any
 
@@ -11,8 +13,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN  # pylint:disable=unused-import
 from .EasyControls3Instance import EasyControls3Instance
-
-import ipaddress
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,14 +26,10 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     # Validate the data can be used to set up a connection.
-
-    # This is a simple example to show an error in the UI for a short hostname
-    # The exceptions are defined at the end of this file, and are used in the
-    # `async_step_user` method below.       
     try:
         ipaddress.IPv4Network(data["host"])
     except ValueError:
-         raise InvalidHost
+        raise InvalidHost
 
     easyControlsInstance = EasyControls3Instance(data["host"])
     result = await easyControlsInstance.test_connection()
@@ -44,8 +40,6 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Hello World."""
-
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
@@ -60,12 +54,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidHost:
-                # The error string is set here, and should be translated.
-                # This example does not currently cover translations, see the
-                # comments on `DATA_SCHEMA` for further details.
-                # Set the error on the `host` field, not the entire form.
                 errors["host"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

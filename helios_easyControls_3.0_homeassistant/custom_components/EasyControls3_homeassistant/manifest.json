@@ -2,7 +2,7 @@
   "codeowners": ["@frawe"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/user/my_component/",
+  "documentation": "https://github.com/frawe/EasyControls3_homeassistant",
   "domain": "EasyControls3_homeassistant",
   "iot_class": "local_polling",
   "name": "easyControls 3.0 homeassistant adapter",
