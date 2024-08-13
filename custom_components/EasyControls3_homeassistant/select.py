@@ -39,7 +39,7 @@ class StateSelect(SelectEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self._easyConnector.IsAvailable
 
     async def async_update(self):
         await self._easyConnector.readCurrentData()

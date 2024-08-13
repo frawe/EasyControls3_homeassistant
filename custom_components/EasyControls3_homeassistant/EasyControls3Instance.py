@@ -33,6 +33,8 @@ class EasyControls3Instance:
         self._sthModified = False
         self._lastUpdate = None
         self._minSecondsBetweenRead = 60
+        self._isAvailable = True
+        self._offlineAfter = datetime.timedelta(minutes=10)
 
     async def _exchangeData(self, request):
         with connect(self._url) as websocket:
@@ -50,10 +52,17 @@ class EasyControls3Instance:
             or (datetime.datetime.now() - self._lastUpdate).total_seconds()
             > self._minSecondsBetweenRead
         ):
-            self._lastUpdate = datetime.datetime.now()
-            request = bytes.fromhex("0300f6000000f900")
-            response = await self._exchangeData(request)
-            self._parseData(response)
+            try:
+                request = bytes.fromhex("0300f6000000f900")
+                response = await self._exchangeData(request)
+                self._parseData(response)
+                self._isAvailable = True
+                self._lastUpdate = datetime.datetime.now()
+            except:
+                LOGGER.debug("error in reading")
+                if datetime.datetime.now() - self._lastUpdate > self._offlineAfter:
+                    self._isAvailable = False
+            
 
     def _parseData(self, data):
         # device info
@@ -278,3 +287,7 @@ class EasyControls3Instance:
     @property
     def sthModified(self):
         return self._sthModified
+
+    @property
+    def IsAvailable(self):
+        return self._isAvailable

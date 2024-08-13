@@ -38,7 +38,7 @@ class FanSpeedNumber(NumberEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self._easyConnector.IsAvailable
 
     @property
     def name(self):

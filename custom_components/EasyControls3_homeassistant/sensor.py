@@ -48,7 +48,7 @@ class SensorBase(Entity):
     @property
     def available(self) -> bool:
         """Return True if roller and hub is available."""
-        return True
+        return self._easyConnector.IsAvailable
 
     async def async_update(self):
         await self._easyConnector.readCurrentData()
