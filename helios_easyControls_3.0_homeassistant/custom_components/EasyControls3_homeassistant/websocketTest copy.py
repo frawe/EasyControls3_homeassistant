@@ -129,7 +129,7 @@ def dataToCelsius(data, offsetPosition):
 # asyncio.run(readCurrentData())
 # asyncio.run(asyncio.sleep(60))
 
-# print("change to intensiv")
+# print("change to intensive")
 # asyncio.run(switchMode(KWLState.Intensive))
 # asyncio.run(asyncio.sleep(20))
 # print("status after change")

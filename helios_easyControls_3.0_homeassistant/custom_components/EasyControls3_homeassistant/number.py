@@ -27,7 +27,7 @@ class FanSpeedNumber(NumberEntity):
         self._attr_unique_id = f"{self._easyConnector.serialNR}_intensivFanSpeed"
 
         # The name of the entity
-        self._attr_name = f"{self._easyConnector.deviceModel} Fan Speed for Intensiv"
+        self._attr_name = f"{self._easyConnector.deviceModel} Fan Speed for intensive"
 
         self.native_value = self._easyConnector.IntensivFanSpeed
 
@@ -42,7 +42,7 @@ class FanSpeedNumber(NumberEntity):
 
     @property
     def name(self):
-        return "Set Speed for intensiv Fan"
+        return "Set Speed for intensive Fan"
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
