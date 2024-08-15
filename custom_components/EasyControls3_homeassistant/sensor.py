@@ -6,7 +6,8 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
-SCAN_INTERVAL = timedelta(minutes=60)
+SCAN_INTERVAL = timedelta(seconds=60)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
