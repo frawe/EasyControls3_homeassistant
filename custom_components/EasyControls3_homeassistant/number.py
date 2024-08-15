@@ -48,3 +48,7 @@ class FanSpeedNumber(NumberEntity):
         """Update the current value."""
         self.native_value = value
         await self._easyConnector.setIntensiveFanSpeed(value)
+
+    async def async_update(self):
+        await self._easyConnector.readCurrentData()
+        self.native_value = self._easyConnector.IntensivFanSpeed

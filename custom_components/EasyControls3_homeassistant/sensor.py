@@ -47,11 +47,7 @@ class SensorBase(Entity):
     # If an entity is offline (return False), the UI will refelect this.
     @property
     def available(self) -> bool:
-        """Return True if roller and hub is available."""
         return self._easyConnector.IsAvailable
-
-    async def async_update(self):
-        await self._easyConnector.readCurrentData()
 
 
 class HumiditySensor(SensorBase):
@@ -75,6 +71,10 @@ class HumiditySensor(SensorBase):
         """Return the state of the sensor."""
         return self._easyConnector.AirRH
 
+    async def async_update(self):
+        await self._easyConnector.readCurrentData()
+        self.native_value = self._easyConnector.AirRH
+
 
 class OutsideTemperaturSensor(SensorBase):
     device_class = SensorDeviceClass.TEMPERATURE
@@ -95,6 +95,10 @@ class OutsideTemperaturSensor(SensorBase):
     def state(self):
         """Return the state of the sensor."""
         return self._easyConnector.OutsideTemperatur
+
+    async def async_update(self):
+        await self._easyConnector.readCurrentData()
+        self.native_value = self._easyConnector.OutsideTemperatur
 
 
 class SupplyTemperaturSensor(SensorBase):
@@ -117,6 +121,10 @@ class SupplyTemperaturSensor(SensorBase):
         """Return the state of the sensor."""
         return self._easyConnector.SupplyTemperatur
 
+    async def async_update(self):
+        await self._easyConnector.readCurrentData()
+        self.native_value = self._easyConnector.SupplyTemperatur
+
 
 class IndoorTepmeraturSensor(SensorBase):
     device_class = SensorDeviceClass.TEMPERATURE
@@ -137,6 +145,10 @@ class IndoorTepmeraturSensor(SensorBase):
     def state(self):
         """Return the state of the sensor."""
         return self._easyConnector.IndoorTepmeratur
+
+    async def async_update(self):
+        await self._easyConnector.readCurrentData()
+        self.native_value = self._easyConnector.IndoorTepmeratur
 
 
 class ExhaustTepmeraturSensor(SensorBase):
@@ -161,6 +173,10 @@ class ExhaustTepmeraturSensor(SensorBase):
     def state(self):
         """Return the state of the sensor."""
         return self._easyConnector.ExhaustTepmeratur
+
+    async def async_update(self):
+        await self._easyConnector.readCurrentData()
+        self.native_value = self._easyConnector.ExhaustTepmeratur
 
 
 class CurrentFanSpeed(SensorBase):
@@ -188,6 +204,10 @@ class CurrentFanSpeed(SensorBase):
     def icon(self):
         return "mdi:fan"
 
+    async def async_update(self):
+        await self._easyConnector.readCurrentData()
+        self.native_value = self._easyConnector.CurrentFanSpeed
+
 
 class FilterChanged(SensorBase):
     device_class = SensorDeviceClass.DATE
@@ -208,6 +228,10 @@ class FilterChanged(SensorBase):
     def icon(self):
         return "mdi:calendar-sync-outline"
 
+    async def async_update(self):
+        await self._easyConnector.readCurrentData()
+        self.native_value = self._easyConnector.filterChanged
+
 
 class FilterDue(SensorBase):
     device_class = SensorDeviceClass.DATE
@@ -227,3 +251,7 @@ class FilterDue(SensorBase):
     @property
     def icon(self):
         return "mdi:calendar-alert-outline"
+
+    async def async_update(self):
+        await self._easyConnector.readCurrentData()
+        self.native_value = self._easyConnector.filterDue
