@@ -20,10 +20,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     new_devices = []
 
     new_devices.append(HumiditySensor(easyConnector))
-    new_devices.append(OutsideTemperaturSensor(easyConnector))
-    new_devices.append(SupplyTemperaturSensor(easyConnector))
-    new_devices.append(IndoorTepmeraturSensor(easyConnector))
-    new_devices.append(ExhaustTepmeraturSensor(easyConnector))
+    new_devices.append(OutsideTemperatureSensor(easyConnector))
+    new_devices.append(SupplyTemperatureSensor(easyConnector))
+    new_devices.append(IndoorTemperatureSensor(easyConnector))
+    new_devices.append(ExhaustTemperatureSensor(easyConnector))
     new_devices.append(CurrentFanSpeed(easyConnector))
     new_devices.append(FilterChanged(easyConnector))
     new_devices.append(FilterDue(easyConnector))
@@ -77,7 +77,7 @@ class HumiditySensor(SensorBase):
         self.native_value = self._easyConnector.AirRH
 
 
-class OutsideTemperaturSensor(SensorBase):
+class OutsideTemperatureSensor(SensorBase):
     device_class = SensorDeviceClass.TEMPERATURE
     native_unit_of_measurement = UnitOfTemperature.CELSIUS
     unit_of_measurement = UnitOfTemperature.CELSIUS
@@ -102,7 +102,7 @@ class OutsideTemperaturSensor(SensorBase):
         self.native_value = self._easyConnector.OutsideTemperatur
 
 
-class SupplyTemperaturSensor(SensorBase):
+class SupplyTemperatureSensor(SensorBase):
     device_class = SensorDeviceClass.TEMPERATURE
     native_unit_of_measurement = UnitOfTemperature.CELSIUS
     unit_of_measurement = UnitOfTemperature.CELSIUS
@@ -114,8 +114,8 @@ class SupplyTemperaturSensor(SensorBase):
         """Initialize the sensor."""
         super().__init__(easyConnector)
 
-        self._attr_unique_id = f"{self._easyConnector.serialNR}_SupplyTemperatur"
-        self._attr_name = f"{self._easyConnector.deviceModel} Supply Temperatur"
+        self._attr_unique_id = f"{self._easyConnector.serialNR}_SupplyTemperature"
+        self._attr_name = f"{self._easyConnector.deviceModel} Supply Temperature"
 
     @property
     def state(self):
@@ -127,7 +127,7 @@ class SupplyTemperaturSensor(SensorBase):
         self.native_value = self._easyConnector.SupplyTemperatur
 
 
-class IndoorTepmeraturSensor(SensorBase):
+class IndoorTemperatureSensor(SensorBase):
     device_class = SensorDeviceClass.TEMPERATURE
     native_unit_of_measurement = UnitOfTemperature.CELSIUS
     unit_of_measurement = UnitOfTemperature.CELSIUS
@@ -139,20 +139,20 @@ class IndoorTepmeraturSensor(SensorBase):
         """Initialize the sensor."""
         super().__init__(easyConnector)
 
-        self._attr_unique_id = f"{self._easyConnector.serialNR}_IndoorTepmeratur"
-        self._attr_name = f"{self._easyConnector.deviceModel} Indoor Tepmeratur"
+        self._attr_unique_id = f"{self._easyConnector.serialNR}_IndoorTemperature"
+        self._attr_name = f"{self._easyConnector.deviceModel} Indoor Temperature"
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._easyConnector.IndoorTepmeratur
+        return self._easyConnector.IndoorTemperature
 
     async def async_update(self):
         await self._easyConnector.readCurrentData()
-        self.native_value = self._easyConnector.IndoorTepmeratur
+        self.native_value = self._easyConnector.IndoorTemperature
 
 
-class ExhaustTepmeraturSensor(SensorBase):
+class ExhaustTemperatureSensor(SensorBase):
     device_class = SensorDeviceClass.TEMPERATURE
     native_unit_of_measurement = UnitOfTemperature.CELSIUS
     unit_of_measurement = UnitOfTemperature.CELSIUS
@@ -165,19 +165,19 @@ class ExhaustTepmeraturSensor(SensorBase):
         super().__init__(easyConnector)
         # As per the sensor, this must be a unique value within this domain. This is done
         # by using the device ID, and appending "_battery"
-        self._attr_unique_id = f"{self._easyConnector.serialNR}_ExhaustTepmeratur"
+        self._attr_unique_id = f"{self._easyConnector.serialNR}_ExhaustTemperature"
 
         # The name of the entity
-        self._attr_name = f"{self._easyConnector.deviceModel} Exhaust Tepmeratur"
+        self._attr_name = f"{self._easyConnector.deviceModel} Exhaust Temperature"
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._easyConnector.ExhaustTepmeratur
+        return self._easyConnector.ExhaustTemperature
 
     async def async_update(self):
         await self._easyConnector.readCurrentData()
-        self.native_value = self._easyConnector.ExhaustTepmeratur
+        self.native_value = self._easyConnector.ExhaustTemperature
 
 
 class CurrentFanSpeed(SensorBase):
