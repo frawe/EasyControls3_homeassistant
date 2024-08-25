@@ -2,6 +2,14 @@
 
 Big thank you at sanchosk for his initial work (https://github.com/sanchosk/helios2mqtt)
 
+## Information
+Current Version 1.1.0
+
+Changes from 1.0.2:
+Some typos were fixed for temperature, the downside of that is that you new sensors will be created (the typos also were in the unique_id).
+
+For complete clean up it's maybe the best to remove the KWL (from integrations), perform a new download and set it up again.
+
 ## Installation
 Via HACS custom repo (not tested at the moment), or copy the folder EasyControls3_homeassistant directly into your custom_components directory (if not available, create one under our conf directory)
 
