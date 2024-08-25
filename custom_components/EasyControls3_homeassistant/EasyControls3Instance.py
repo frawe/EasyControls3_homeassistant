@@ -22,10 +22,10 @@ class EasyControls3Instance:
         self._CurrentFanSpeed = None
         self._intensivFanSpeed = None
         self._intensivDuration = None
-        self._OutsideTemperatur = None
-        self._SupplyTemperatur = None
-        self._IndoorTepmeratur = None
-        self._ExhaustTepmeratur = None
+        self._OutsideTemperature = None
+        self._SupplyTemperature = None
+        self._IndoorTemperature = None
+        self._ExhaustTemperature = None
         self._AirRH = None
         self._filterInterval = None
         self._filterChanged = None
@@ -97,11 +97,11 @@ class EasyControls3Instance:
         self._CurrentFanSpeed = data[129]
         self._intensivFanSpeed = data[431]
 
-        # temperaturs
-        self._OutsideTemperatur = dataToCelsius(data, 67)
-        self._SupplyTemperatur = dataToCelsius(data, 69)
-        self._IndoorTepmeratur = dataToCelsius(data, 65)
-        self._ExhaustTepmeratur = dataToCelsius(data, 66)
+        # temperatures
+        self._OutsideTemperature = dataToCelsius(data, 67)
+        self._SupplyTemperature = dataToCelsius(data, 69)
+        self._IndoorTemperature = dataToCelsius(data, 65)
+        self._ExhaustTemperature = dataToCelsius(data, 66)
 
         # humidity
         self._AirRH = data[74 * 2 + 1]
@@ -253,20 +253,20 @@ class EasyControls3Instance:
         return self._intensivDuration
 
     @property
-    def OutsideTemperatur(self):
-        return self._OutsideTemperatur
+    def OutsideTemperature(self):
+        return self._OutsideTemperature
 
     @property
-    def SupplyTemperatur(self):
-        return self._SupplyTemperatur
+    def SupplyTemperature(self):
+        return self._SupplyTemperature
 
     @property
-    def IndoorTepmeratur(self):
-        return self._IndoorTepmeratur
+    def IndoorTemperature(self):
+        return self._IndoorTemperature
 
     @property
-    def ExhaustTepmeratur(self):
-        return self._ExhaustTepmeratur
+    def ExhaustTemperature(self):
+        return self._ExhaustTemperature
 
     @property
     def AirRH(self):
