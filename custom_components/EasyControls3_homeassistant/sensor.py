@@ -89,17 +89,17 @@ class OutsideTemperatureSensor(SensorBase):
         """Initialize the sensor."""
         super().__init__(easyConnector)
 
-        self._attr_unique_id = f"{self._easyConnector.serialNR}_OutsideTemperatur"
-        self._attr_name = f"{self._easyConnector.deviceModel} Outside Temperatur"
+        self._attr_unique_id = f"{self._easyConnector.serialNR}_OutsideTemperature"
+        self._attr_name = f"{self._easyConnector.deviceModel} Outside Temperature"
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._easyConnector.OutsideTemperatur
+        return self._easyConnector.OutsideTemperature
 
     async def async_update(self):
         await self._easyConnector.readCurrentData()
-        self.native_value = self._easyConnector.OutsideTemperatur
+        self.native_value = self._easyConnector.OutsideTemperature
 
 
 class SupplyTemperatureSensor(SensorBase):
@@ -120,11 +120,11 @@ class SupplyTemperatureSensor(SensorBase):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._easyConnector.SupplyTemperatur
+        return self._easyConnector.SupplyTemperature
 
     async def async_update(self):
         await self._easyConnector.readCurrentData()
-        self.native_value = self._easyConnector.SupplyTemperatur
+        self.native_value = self._easyConnector.SupplyTemperature
 
 
 class IndoorTemperatureSensor(SensorBase):
