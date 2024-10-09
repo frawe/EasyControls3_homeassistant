@@ -35,6 +35,7 @@ class EasyControls3Instance:
         self._minSecondsBetweenRead = 60
         self._isAvailable = True
         self._offlineAfter = datetime.timedelta(minutes=10)
+        self._isOn = True
 
     async def _exchangeData(self, request):
         with connect(self._url) as websocket:
@@ -51,6 +52,7 @@ class EasyControls3Instance:
             self._lastUpdate is None
             or (datetime.datetime.now() - self._lastUpdate).total_seconds()
             > self._minSecondsBetweenRead
+            or self.sthModified
         ):
             try:
                 request = bytes.fromhex("0300f6000000f900")
@@ -58,11 +60,11 @@ class EasyControls3Instance:
                 self._parseData(response)
                 self._isAvailable = True
                 self._lastUpdate = datetime.datetime.now()
+                self.sthModified = False
             except:
                 LOGGER.debug("error in reading")
                 if datetime.datetime.now() - self._lastUpdate > self._offlineAfter:
                     self._isAvailable = False
-            
 
     def _parseData(self, data):
         # device info
@@ -127,13 +129,27 @@ class EasyControls3Instance:
             intensivDurationHours, intensivDurationMinutes
         )
 
+        # on off state
+        # value_if_true if condition else value_if_false
+        self._isOn = True if (data[217] == 0) else False
+
     async def switchMode(self, wantedKWLState):
         if wantedKWLState is KWLState.AtHome:
             requestData = "0800f9000112000004120000051200000b37"
         elif wantedKWLState is KWLState.Away:
             requestData = "0800f9000112010004120000051200000c37"
         elif wantedKWLState is KWLState.Intensive:
-            requestData = "0600f9000412b40005120000bc25"
+            requestedDuration = (
+                self.IntensivDuration.hour * 60 + self.IntensivDuration.minute
+            )
+            requestData = (
+                "0600f9000412"
+                + (requestedDuration).to_bytes(2, byteorder="little").hex()
+                + "05120000"
+                + (requestedDuration + 0x2508).to_bytes(2, byteorder="little").hex()
+            )
+
+
         elif wantedKWLState is KWLState.Individual:
             requestData = "0600f90004120000051296009e25"
         else:
@@ -220,6 +236,21 @@ class EasyControls3Instance:
         self._parseData(response)
         return bool(response is not None)
 
+    async def turnOffOn(self, requestTurnOff: bool):
+        if requestTurnOff is True:
+            requestData = "0400f900021205000413"
+        else:
+            requestData = "0400f90002120000ff12"
+
+        request = bytes.fromhex(requestData)
+        response = await self._exchangeData(request)
+        if bytes.fromhex("0200f500f700") == response:
+            LOGGER.debug("expected response")
+        else:
+            LOGGER.debug("unexpected response")
+
+        self._sthModified = True
+
     @property
     def url(self):
         return self._url
@@ -291,3 +322,7 @@ class EasyControls3Instance:
     @property
     def IsAvailable(self):
         return self._isAvailable
+
+    @property
+    def IsOn(self):
+        return self._isOn
