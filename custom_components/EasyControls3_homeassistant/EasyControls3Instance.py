@@ -21,6 +21,8 @@ class EasyControls3Instance:
         self._instanceState = None
         self._CurrentFanSpeed = None
         self._intensivFanSpeed = None
+        self._atHomeFanSpeed = None
+        self._awayFanSpeed = None
         self._intensivDuration = None
         self._OutsideTemperature = None
         self._SupplyTemperature = None
@@ -98,6 +100,8 @@ class EasyControls3Instance:
         # fan
         self._CurrentFanSpeed = data[129]
         self._intensivFanSpeed = data[431]
+        self._atHomeFanSpeed = data[419]
+        self._awayFanSpeed = data[407]
 
         # temperatures
         self._OutsideTemperature = dataToCelsius(data, 67)
@@ -131,7 +135,7 @@ class EasyControls3Instance:
 
         # on off state
         # value_if_true if condition else value_if_false
-        self._isOn = True if (data[217] == 0) else False
+        self._isOn = bool(data[217] == 0)
 
     async def switchMode(self, wantedKWLState):
         if wantedKWLState is KWLState.AtHome:
@@ -148,8 +152,6 @@ class EasyControls3Instance:
                 + "05120000"
                 + (requestedDuration + 0x2508).to_bytes(2, byteorder="little").hex()
             )
-
-
         elif wantedKWLState is KWLState.Individual:
             requestData = "0600f90004120000051296009e25"
         else:
@@ -165,27 +167,65 @@ class EasyControls3Instance:
 
         self._sthModified = True
 
-    async def setIntensiveFanSpeed(self, requestedFanSpeed: int):
+    def checkFanSpeedLimit(self, requestedFanSpeed: int):
         if requestedFanSpeed < 1:
             requestedFanSpeed = 1
         elif requestedFanSpeed > 100:
             requestedFanSpeed = 100
         else:
             requestedFanSpeed = round(requestedFanSpeed)
+        return requestedFanSpeed
 
-        requestedSpeedPlainString = (
+    def createFanSpeedPlainRequestString(self, requestedFanSpeed: int):
+        return (
             f"{requestedFanSpeed:x}"
             if len(f"{requestedFanSpeed:x}") == 2
             else ("0" + f"{requestedFanSpeed:x}")
         )  # needs to be 1byte, 2 nibble long
-        requestedSpeedModdedString = (
-            f"{requestedFanSpeed + 30 :x}"
-            if len(f"{requestedFanSpeed + 30 :x}") == 2
-            else ("0" + f"{requestedFanSpeed + 30 :x}")
+
+    def createFanSpeedModdedRequestString(self, requestedFanSpeed: int, mode: KWLState):
+        offset = 30  # Intensive
+
+        if mode is KWLState.AtHome:
+            offset = 24
+        elif mode is KWLState.Away:
+            offset = 18
+        elif mode is KWLState.Intensive:
+            offset = 30
+        else:  # Individual/Fireplace should not be changed from here
+            LOGGER.debug("Individual/Fireplace is not supported")
+
+        return (
+            f"{requestedFanSpeed + offset :x}"
+            if len(f"{requestedFanSpeed + offset :x}") == 2
+            else ("0" + f"{requestedFanSpeed + offset :x}")
         )  # needs to be 1byte, 2 nibble long
 
+    async def setFanSpeed(self, requestedFanSpeed: int, mode: KWLState):
+        requestedFanSpeed = self.checkFanSpeedLimit(requestedFanSpeed)
+        requestedSpeedPlainString = self.createFanSpeedPlainRequestString(
+            requestedFanSpeed
+        )
+        requestedSpeedModdedString = self.createFanSpeedModdedRequestString(
+            requestedFanSpeed, mode
+        )
+
+        modeIdentifier = "21"  # Intensive
+
+        if mode is KWLState.AtHome:
+            modeIdentifier = "1B"
+        elif mode is KWLState.Away:
+            modeIdentifier = "15"
+        elif mode is KWLState.Intensive:
+            modeIdentifier = "21"
+        else:  # Individual/Fireplace should not be changed from here
+            LOGGER.debug("Individual/Fireplace is not supported")
+            return
+
         requestData = (
-            "0400f9002150"
+            "04 00 f9 00"
+            + modeIdentifier
+            + "50"
             + requestedSpeedPlainString
             + "00"
             + requestedSpeedModdedString
@@ -200,6 +240,15 @@ class EasyControls3Instance:
             LOGGER.debug("unexpected response")
 
         self._sthModified = True
+
+    async def setIntensiveFanSpeed(self, requestedFanSpeed: int):
+        await self.setFanSpeed(requestedFanSpeed, KWLState.Intensive)
+
+    async def setAtHomeFanSpeed(self, requestedFanSpeed: int):
+        await self.setFanSpeed(requestedFanSpeed, KWLState.AtHome)
+
+    async def setAwayFanSpeed(self, requestedFanSpeed: int):
+        await self.setFanSpeed(requestedFanSpeed, KWLState.Away)
 
     async def setIntensiveDuration(self, requestedDurationTime: datetime.time):
         requestedDuration = (
@@ -274,6 +323,14 @@ class EasyControls3Instance:
     @property
     def CurrentFanSpeed(self):
         return self._CurrentFanSpeed
+
+    @property
+    def AtHomeFanSpeed(self):
+        return self._atHomeFanSpeed
+
+    @property
+    def AwayFanSpeed(self):
+        return self._awayFanSpeed
 
     @property
     def IntensivFanSpeed(self):
