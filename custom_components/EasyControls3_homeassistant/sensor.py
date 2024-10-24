@@ -1,7 +1,11 @@
 from datetime import timedelta
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    UnitOfTemperature,
+    CONCENTRATION_PARTS_PER_MILLION,
+)
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -24,6 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     new_devices.append(SupplyTemperatureSensor(easyConnector))
     new_devices.append(IndoorTemperatureSensor(easyConnector))
     new_devices.append(ExhaustTemperatureSensor(easyConnector))
+    new_devices.append(CO2Sensor(easyConnector))
     new_devices.append(CurrentFanSpeed(easyConnector))
     new_devices.append(FilterChanged(easyConnector))
     new_devices.append(FilterDue(easyConnector))
@@ -178,6 +183,47 @@ class ExhaustTemperatureSensor(SensorBase):
     async def async_update(self):
         await self._easyConnector.readCurrentData()
         self.native_value = self._easyConnector.ExhaustTemperature
+
+
+class CO2Sensor(SensorBase):
+    device_class = SensorDeviceClass.CO2
+    native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
+    unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
+    native_value = int
+    state_class = "measurement"
+    suggested_display_precision = 3
+
+    def __init__(self, easyConnector):
+        """Initialize the sensor."""
+        super().__init__(easyConnector)
+        # As per the sensor, this must be a unique value within this domain. This is done
+        # by using the device ID, and appending "_battery"
+        self._attr_unique_id = f"{self._easyConnector.serialNR}_CO2Value"
+
+        # The name of the entity
+        self._attr_name = f"{self._easyConnector.deviceModel} CO2 Value"
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        if self._easyConnector.CO2Value == 0xFFFF:
+            return 0
+        else:
+            return self._easyConnector.CO2Value
+
+    async def async_update(self):
+        await self._easyConnector.readCurrentData()
+        if self._easyConnector.CO2Value == 0xFFFF:
+            self.native_value = 0
+        else:
+            self.native_value = self._easyConnector.CO2Value
+
+    # If the sensor is not available the KWL reports FF FF, so this is used to set the sensor to be not available
+    @property
+    def available(self) -> bool:
+        return (
+            self._easyConnector.IsAvailable and self._easyConnector.CO2Value != 0xFFFF
+        )
 
 
 class CurrentFanSpeed(SensorBase):

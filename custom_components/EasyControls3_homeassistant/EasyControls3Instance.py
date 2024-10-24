@@ -38,6 +38,7 @@ class EasyControls3Instance:
         self._isAvailable = True
         self._offlineAfter = datetime.timedelta(minutes=10)
         self._isOn = True
+        self._CO2Value = None
 
     async def _exchangeData(self, request):
         with connect(self._url) as websocket:
@@ -136,6 +137,9 @@ class EasyControls3Instance:
         # on off state
         # value_if_true if condition else value_if_false
         self._isOn = bool(data[217] == 0)
+
+        # CO2 value
+        self._CO2Value = int(data[182]) << 8 | int(data[183])
 
     async def switchMode(self, wantedKWLState):
         if wantedKWLState is KWLState.AtHome:
@@ -383,3 +387,7 @@ class EasyControls3Instance:
     @property
     def IsOn(self):
         return self._isOn
+
+    @property
+    def CO2Value(self):
+        return self._CO2Value
