@@ -58,11 +58,10 @@ class EasyControls3Instance:
                 self._parseData(response)
                 self._isAvailable = True
                 self._lastUpdate = datetime.datetime.now()
-            except:
-                LOGGER.debug("error in reading")
+            except Exception as exception:
+                LOGGER.warning(f"error in reading ({exception})")
                 if datetime.datetime.now() - self._lastUpdate > self._offlineAfter:
                     self._isAvailable = False
-            
 
     def _parseData(self, data):
         # device info
@@ -287,6 +286,10 @@ class EasyControls3Instance:
     @property
     def sthModified(self):
         return self._sthModified
+
+    @sthModified.setter
+    def sthModified(self, value):
+        self._sthModified = value
 
     @property
     def IsAvailable(self):
