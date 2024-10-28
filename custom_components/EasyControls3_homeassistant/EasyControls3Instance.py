@@ -155,8 +155,6 @@ class EasyControls3Instance:
                 + "05120000"
                 + (requestedDuration + 0x2508).to_bytes(2, byteorder="little").hex()
             )
-
-
         elif wantedKWLState is KWLState.Individual:
             requestData = "0600f90004120000051296009e25"
         else:
