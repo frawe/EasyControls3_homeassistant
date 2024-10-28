@@ -3,7 +3,7 @@ import logging
 import math
 
 from dateutil.relativedelta import relativedelta
-from websockets.sync.client import connect
+from websockets.asyncio.client import connect
 
 from .Conversions import dataToCelsius
 from .deviceList import deviceInfo
@@ -41,21 +41,20 @@ class EasyControls3Instance:
         self._CO2Value = None
 
     async def _exchangeData(self, request):
-        with connect(self._url) as websocket:
+        async with connect(self._url) as websocket:
             LOGGER.debug("connected")
-
             # request current data package
-            websocket.send(request)
+            await websocket.send(request)
             LOGGER.debug("sent")
-
-            return websocket.recv()
+            response = await websocket.recv()
+            return response
 
     async def readCurrentData(self):
         if (
             self._lastUpdate is None
             or (datetime.datetime.now() - self._lastUpdate).total_seconds()
             > self._minSecondsBetweenRead
-            or self.sthModified
+            or self._sthModified
         ):
             try:
                 request = bytes.fromhex("0300f6000000f900")
@@ -63,9 +62,9 @@ class EasyControls3Instance:
                 self._parseData(response)
                 self._isAvailable = True
                 self._lastUpdate = datetime.datetime.now()
-                self.sthModified = False
-            except:
-                LOGGER.debug("error in reading")
+                self._sthModified = False
+            except Exception as exception:
+                LOGGER.error(f"error in reading ({exception})")
                 if datetime.datetime.now() - self._lastUpdate > self._offlineAfter:
                     self._isAvailable = False
 
@@ -156,6 +155,8 @@ class EasyControls3Instance:
                 + "05120000"
                 + (requestedDuration + 0x2508).to_bytes(2, byteorder="little").hex()
             )
+
+
         elif wantedKWLState is KWLState.Individual:
             requestData = "0600f90004120000051296009e25"
         else:
