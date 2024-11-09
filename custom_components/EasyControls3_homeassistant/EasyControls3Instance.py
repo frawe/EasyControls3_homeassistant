@@ -15,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 class EasyControls3Instance:
     def __init__(self, url: str) -> None:
-        self.lock = asyncio.Lock()
+        self._lock = asyncio.Lock()
         self._url = "ws://" + url + ":80"
         self._deviceModel = None
         self._deviceType = None
@@ -43,14 +43,13 @@ class EasyControls3Instance:
         self._CO2Value = None
 
     async def _exchangeData(self, request):
-        async with self.lock:
-            async with connect(self._url) as websocket:
-                LOGGER.debug("connected")
-                # request current data package
-                await websocket.send(request)
-                LOGGER.debug("sent")
-                response = await websocket.recv()
-                return response
+        async with self._lock, connect(self._url) as websocket:
+            LOGGER.debug("connected")
+            # request current data package
+            await websocket.send(request)
+            LOGGER.debug("sent")
+            response = await websocket.recv()
+            return response
 
     async def readCurrentData(self):
         if (
