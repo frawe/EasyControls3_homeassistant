@@ -1,12 +1,15 @@
 from datetime import timedelta
 
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfTemperature,
     CONCENTRATION_PARTS_PER_MILLION,
 )
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
@@ -39,7 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(new_devices)
 
 
-class SensorBase(Entity):
+class SensorBase(SensorEntity):
     """Base representation of a Sensor."""
 
     def __init__(self, easyConnector):
@@ -64,8 +67,8 @@ class HumiditySensor(SensorBase):
     native_unit_of_measurement = PERCENTAGE
     unit_of_measurement = PERCENTAGE
     native_value = int
-    state_class = "measurement"
-    suggested_display_precision = 2
+    state_class = SensorStateClass.MEASUREMENT
+    suggested_display_precision = 1
 
     def __init__(self, easyConnector):
         """Initialize the sensor."""
@@ -89,8 +92,8 @@ class OutsideTemperatureSensor(SensorBase):
     native_unit_of_measurement = UnitOfTemperature.CELSIUS
     unit_of_measurement = UnitOfTemperature.CELSIUS
     native_value = float
-    state_class = "measurement"
-    suggested_display_precision = 3
+    state_class = SensorStateClass.MEASUREMENT
+    suggested_display_precision = 1
 
     def __init__(self, easyConnector):
         """Initialize the sensor."""
@@ -114,8 +117,8 @@ class SupplyTemperatureSensor(SensorBase):
     native_unit_of_measurement = UnitOfTemperature.CELSIUS
     unit_of_measurement = UnitOfTemperature.CELSIUS
     native_value = float
-    state_class = "measurement"
-    suggested_display_precision = 3
+    state_class = SensorStateClass.MEASUREMENT
+    suggested_display_precision = 1
 
     def __init__(self, easyConnector):
         """Initialize the sensor."""
@@ -139,8 +142,8 @@ class IndoorTemperatureSensor(SensorBase):
     native_unit_of_measurement = UnitOfTemperature.CELSIUS
     unit_of_measurement = UnitOfTemperature.CELSIUS
     native_value = float
-    state_class = "measurement"
-    suggested_display_precision = 3
+    state_class = SensorStateClass.MEASUREMENT
+    suggested_display_precision = 1
 
     def __init__(self, easyConnector):
         """Initialize the sensor."""
@@ -164,8 +167,8 @@ class ExhaustTemperatureSensor(SensorBase):
     native_unit_of_measurement = UnitOfTemperature.CELSIUS
     unit_of_measurement = UnitOfTemperature.CELSIUS
     native_value = float
-    state_class = "measurement"
-    suggested_display_precision = 3
+    state_class = SensorStateClass.MEASUREMENT
+    suggested_display_precision = 1
 
     def __init__(self, easyConnector):
         """Initialize the sensor."""
@@ -192,8 +195,8 @@ class CO2Sensor(SensorBase):
     native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
     unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
     native_value = int
-    state_class = "measurement"
-    suggested_display_precision = 3
+    state_class = SensorStateClass.MEASUREMENT
+    suggested_display_precision = 1
 
     def __init__(self, easyConnector):
         """Initialize the sensor."""
@@ -234,8 +237,8 @@ class CurrentFanSpeed(SensorBase):
     native_unit_of_measurement = PERCENTAGE
     unit_of_measurement = PERCENTAGE
     native_value = int
-    state_class = "measurement"
-    suggested_display_precision = 2
+    state_class = SensorStateClass.MEASUREMENT
+    suggested_display_precision = 1
 
     def __init__(self, easyConnector):
         """Initialize the sensor."""
