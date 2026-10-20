@@ -67,7 +67,7 @@ class EasyControls3Instance:
                 self._sthModified = False
             except Exception as exception:
                 LOGGER.error(f"error in reading ({exception})")
-                if datetime.datetime.now() - self._lastUpdate > self._offlineAfter:
+                if self._lastUpdate is None or datetime.datetime.now() - self._lastUpdate > self._offlineAfter:
                     self._isAvailable = False
 
     def _parseData(self, data):
